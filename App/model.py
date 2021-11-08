@@ -51,50 +51,68 @@ def newAnalyzer():
     return analyzer
 # Funciones para agregar informacion al catalogo
 
-def addSighting(analyzer, sighting):
+def addSighting(analyzer, sighting, categoria):
     lt.addLast(analyzer["sightings"], sighting)
-    updateDateIndex(analyzer["dateIndex"], sighting)
+    updateDateIndex(analyzer["dateIndex"], sighting, categoria)
     return analyzer
 
-def updateDateIndex(map, sighting):
+def updateDateIndex(map, sighting, categoria):
     date = sighting["datetime"]
     sightingdate = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
     entry = om.get(map, sightingdate.date())
     if entry is None:
-        datentry =  newDataEntry(sighting)
+        datentry =  newDataEntry(sighting, categoria)
         om.put(map,sightingdate.date(), datentry)
     else:
         datentry = me.getValue(entry)
-    addDateIndex(datentry, sighting)
+    addDateIndex(datentry, sighting, categoria)
     return map
 
-def addDateIndex(datentry, sighting):
+
+
+def addDateIndex(datentry, sighting, categoria):
     lst = datentry["lstsightings"]
     lt.addLast(lst, sighting)
-    countryIndex = datentry["countryIndex"]
-    counentry = mp.get(countryIndex, sighting["country"])
-    if (counentry is None):
-        entry = newCountryEntry(sighting["country"], sighting)
-        lt.addLast(entry["lstcountries"], sighting)
-        mp.put(countryIndex, sighting["country"], entry)
+    categoriaIndex = datentry[categoria+"Index"]
+    entry = mp.get(categoriaIndex, sighting["categoria"])
+    if (entry is None):
+        entry = newCategoryEntry(sighting[categoria], sighting)
+        lt.addLast(entry["lstcities"], sighting)
+        mp.put(categoriaIndex, sighting[categoria], entry)
     else:
-        entry = me.getValue(counentry)
-        lt.addLast(entry["lstcountries"], sighting)
+        entry = me.getValue(entry)
+        lt.addLast(entry["lstcities"], sighting)
     return datentry
 
 def newDataEntry(sighting):
-    entry = {"countryIndex": None, "lstsightings": None}
-    entry["countryIndex"] = mp.newMap(numelements=200,
+    entry = {"cityIndex": None, "lstsightings": None}
+    entry["cityIndex"] = mp.newMap(numelements=10,
                                       maptype = "PROBING",
-                                      comparefunction=compareCountries)
+                                      comparefunction=comparePlaces)
     entry["lstsightings"] = lt.newList("SINGLE_LINKED", compareDates)
     return entry
 
-def newCountryEntry(country, sighting):
-    centry = {"country": None, "lstcountries": None}
-    centry["country"] = country
-    centry["lstcountries"] = lt.newList("SINGLELINKED", compareCountries) 
+def newCategoryEntry(city, sighting):
+    centry = {"city": None, "lstcities": None}
+    centry["city"] = city
+    centry["lstcities"] = lt.newList("SINGLELINKED", comparePlaces) 
     return centry
+
+
+def minKey(analyzer):
+    """
+    Llave mas pequena
+    """
+    return om.minKey(analyzer['dateIndex'])
+
+
+def maxKey(analyzer):
+    """
+    Llave mas grande
+    """
+    return om.maxKey(analyzer['dateIndex'])
+
+
 # Funciones para creacion de datos
 
 # Funciones de consulta
@@ -106,6 +124,40 @@ def indexHeight(analyzer):
 
 def indexSize(analyzer):
     return om.size(analyzer["dateIndex"])
+
+
+def getSightingsbyCity(analyzer, city):
+    totalsightings = lt.newList(cmpfunction=compareDates)
+    sightingDatesPair = om.keySet(analyzer["dateIndex"])
+    for i in range(1, lt.size(sightingDatesPair)+1):
+        
+        date = (lt.getElement(sightingDatesPair, i))
+        sightingdate = om.get(analyzer["dateIndex"], date)
+        sightingmap = me.getValue(sightingdate)["cityIndex"]
+
+        info = mp.get(sightingmap, city)
+        if info is not None:
+            lstsightings = me.getValue(info)["lstcities"]
+            for i in range(1, lt.size(lstsightings)+1):
+                sightinginfo = lt.getElement(lstsightings, i)
+                informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": 0}
+                
+            
+                informacion["Ciudad"] = sightinginfo["city"]
+                informacion["Pais"] = sightinginfo["country"] 
+                informacion["Duracion"] = sightinginfo["duration (seconds)"]
+                informacion["Forma"] =  sightinginfo["shape"]
+
+
+                sighting = {sightinginfo["datetime"]: informacion}
+                lt.addLast(totalsightings, sighting)
+    return totalsightings
+ 
+
+
+    
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 # Funciones de ordenamiento
@@ -126,11 +178,19 @@ def compareDates(date1, date2):
     else:
         return -1
 
-def compareCountries(country1, country2):
-    country = me.getKey(country2)
-    if (country1 == country):
+def comparePlaces(city1, city2):
+    city = me.getKey(city2)
+    if (city1 == city):
         return 0
-    elif (country1 > country):
+    elif (city1 > city):
+        return 1
+    else:
+        return -1
+
+def compareDurations(duration1, duration2):
+    if (duration1 == duration2):
+        return 0
+    elif (duration1 > duration2):
         return 1
     else:
         return -1

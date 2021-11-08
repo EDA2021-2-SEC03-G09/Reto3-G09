@@ -60,6 +60,25 @@ def indexSize(analyzer):
 
     return model.indexSize(analyzer)
 
+def minKey(analyzer):
+    """
+    La menor llave del arbol
+    """
+    return model.minKey(analyzer)
+
+
+def maxKey(analyzer):
+    """
+    La mayor llave del arbol
+    """
+    return model.maxKey(analyzer)
+
+def getSightingsbyCity(analyzer, city):
+    return model.getSightingsbyCity(analyzer, city)
+
+def sightingsbyDuration(analyzer, limin, limsup):
+    return model.sightingsbyDuration(analyzer, limin, limsup)
+
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo
