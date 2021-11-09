@@ -52,6 +52,24 @@ def printMenu():
     print("7- Contar avistamientos en una zona geografica")
     print("0- Salir")
 
+def crearTop(resultado, comparacion):
+    print("\nSe encontraron " + str(lt.size(resultado)) + " avistamientos\n")
+    print("\nLos primeros y ultimos 3 avistamientos se muestran a continuacion: ")
+    if lt.size(resultado) >= 6:
+        top = lt.newList(cmpfunction=comparacion)
+        for i in range(0,3):
+            lt.addLast(top, lt.firstElement(resultado))
+            lt.removeFirst(resultado)
+        i = 2
+        while i >= 0:
+            lt.addLast(top, lt.getElement(resultado, lt.size(resultado)-i))
+            lt.deleteElement(resultado, lt.size(resultado)- i)
+            i -= 1
+        printAvistamiento(top)
+    
+    else: 
+        printAvistamiento(resultado)
+
 def printAvistamiento(resultado):
     for i in range(1, lt.size(resultado) +1):
         info = lt.getElement(resultado, i)
@@ -95,21 +113,7 @@ while True:
         city = input("\nCiudad a buscar: \n>")
         print("\nCargando ciudades...")
         resultado = controller.getSightingsbyCity(cont, city)
-        print("Se encontraron " + str(lt.size(resultado)) + " avistamientos\n")
-        if lt.size(resultado) >= 6:
-            top = lt.newList(cmpfunction=compareDates)
-            for i in range(0,3):
-                lt.addLast(top, lt.firstElement(resultado))
-                lt.removeFirst(resultado)
-            i = 2
-            while i >= 0:
-                lt.addLast(top, lt.getElement(resultado, lt.size(resultado)-i))
-                lt.deleteElement(resultado, lt.size(resultado)- i)
-                i -= 1
-            printAvistamiento(top)
-    
-        else: 
-            printAvistamiento(resultado)
+        crearTop(resultado, compareDates)
         cont = controller.init()
 
     elif int(inputs[0]) == 4:
@@ -118,29 +122,21 @@ while True:
         limin = float(input("Ingrese un limite inferior: "))
         limsup = float(input("Ingrese limite superior: " ))
         print("\nCargando avistamientos por duracion...")
-    
         resultado, max = controller.sightingsbyDuration(cont, limsup, limin)
-        print("Se encontraron " + str(lt.size(resultado)) + " avistamientos\n")
-        print("El avistamiento mas largo registrado tiene una duracion de " + str(max) +" segundos")
-        print("\nLos primeros y ultimos 3 avistamientos se muestran a continuacion: ")
-        if lt.size(resultado) >= 6:
-            top = lt.newList(cmpfunction=compareDurations)
-            for i in range(0,3):
-                lt.addLast(top, lt.firstElement(resultado))
-                lt.removeFirst(resultado)
-            i = 2
-            while i >= 0:
-                lt.addLast(top, lt.getElement(resultado, lt.size(resultado)-i))
-                lt.deleteElement(resultado, lt.size(resultado)- i)
-                i -= 1
-            printAvistamiento(top)
-    
-        else: 
-            printAvistamiento(resultado)
+        crearTop(resultado, compareDurations)
+        print("\nEl avistamiento mas largo registrado tiene una duracion de " + str(max) +" segundos")
         cont = controller.init()
 
-
-        
+    elif int(inputs[0]) == 5:
+        print("\nRecuperando informacion...")
+        controller.loadData(cont, sightingsfile, "datetime")
+        limin = input("Ingrese un limite inferior: ")
+        limsup =input("Ingrese limite superior: " )
+        print("\nCargando avistamientos por hora...")
+        resultado, max = controller.latestSighting(cont, limsup, limin)
+        crearTop(resultado, compareDurations)
+        print("\nEl avistamiento mas tarde ocurrio a las " + str(max))
+        cont = controller.init()
 
     
     else:

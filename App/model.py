@@ -59,10 +59,10 @@ def addSighting(analyzer, sighting, categoria):
 def updateDateIndex(map, sighting, categoria):
     date = sighting["datetime"]
     sightingdate = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
-    entry = om.get(map, sightingdate.date())
+    entry = om.get(map, sightingdate)
     if entry is None:
         datentry =  newDataEntry(sighting, categoria)
-        om.put(map,sightingdate.date(), datentry)
+        om.put(map,sightingdate, datentry)
     else:
         datentry = me.getValue(entry)
     addDateIndex(datentry, sighting, categoria)
@@ -184,7 +184,35 @@ def sightingsbyDuration(analyzer, limsup, limin):
                     lt.addLast(totalsightings, sighting)
     return(totalsightings, max)  
     
-
+def latestSightings(analyzer, limsup, limin):
+    max = datetime.datetime.strptime("00:00:00", "%X")
+    totalsightings = lt.newList(cmpfunction=compareDurations)
+    sightingDatesPair = om.keySet(analyzer["dateIndex"])
+    limsup = datetime.datetime.strptime(limsup, "%X")
+    limin = datetime.datetime.strptime(limin, "%X")
+    for i in range(1, lt.size(sightingDatesPair)+1):
+        date = (lt.getElement(sightingDatesPair, i))
+        sightingdate = om.get(analyzer["dateIndex"], date)
+        sightingmap = me.getValue(sightingdate)["datetimeIndex"]
+        duracion = lt.firstElement(mp.keySet(sightingmap))    
+        duracionprov = datetime.datetime.strptime(duracion, "%Y-%m-%d %H:%M:%S")
+        
+        if str(duracionprov.time()) > str(max):
+            max = duracionprov.time()
+        if duracionprov.time() > limin.time() and duracionprov.time() < limsup.time():
+            info = mp.get(sightingmap, duracion)
+            if info is not None:
+                lstsightings = me.getValue(info)["lst"]
+                for i in range(1, lt.size(lstsightings)+1):
+                    sightinginfo = lt.getElement(lstsightings, i)
+                    informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": 0}
+                    informacion["Ciudad"] = sightinginfo["city"]
+                    informacion["Pais"] = sightinginfo["country"] 
+                    informacion["Duracion"] = sightinginfo["duration (seconds)"]
+                    informacion["Forma"] =  sightinginfo["shape"]
+                    sighting = {sightinginfo["datetime"]: informacion}
+                    lt.addLast(totalsightings, sighting)
+    return(totalsightings, max)  
     
 
 

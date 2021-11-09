@@ -79,6 +79,9 @@ def getSightingsbyCity(analyzer, city):
 def sightingsbyDuration(analyzer, limin, limsup):
     return model.sightingsbyDuration(analyzer, limin, limsup)
 
+def latestSighting(analyzer, limsup, limin):
+    return model.latestSightings(analyzer, limsup, limin)
+
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo
