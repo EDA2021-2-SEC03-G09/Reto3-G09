@@ -38,7 +38,7 @@ def init():
 
 # Funciones para la carga de datos
 
-def loadData(analyzer, ufosfile):
+def loadData(analyzer, ufosfile, categoria):
     """
     Carga los datos de los archivos CSV en el modelo
     """
@@ -46,7 +46,7 @@ def loadData(analyzer, ufosfile):
     input_file = csv.DictReader(open(ufosfile, encoding="utf-8"),
                                 delimiter=",")
     for sighting in input_file:
-        model.addSighting(analyzer, sighting)
+        model.addSighting(analyzer, sighting, categoria)
     return analyzer
 
 def sightingsSize(analyzer):

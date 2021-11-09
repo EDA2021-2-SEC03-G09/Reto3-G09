@@ -20,6 +20,9 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+
+
+from model import compareDurations
 from model import compareDates
 import config as cf
 import sys
@@ -76,18 +79,21 @@ while True:
 
     elif int(inputs[0]) == 2:
         print("\nCargando informacion de avistamientos...")
-        controller.loadData(cont, sightingsfile)
+
+        controller.loadData(cont, sightingsfile, "city")
 
         print('Avistamientos cargados: ' + str(controller.sightingsSize(cont)))
         print('Altura del arbol: ' + str(controller.indexHeight(cont)))
         print('Elementos en el arbol: ' + str(controller.indexSize(cont)))
         print('Menor Llave: ' + str(controller.minKey(cont)))
         print('Mayor Llave: ' + str(controller.maxKey(cont)))
-        
+        cont = controller.init()
 
     elif int(inputs[0]) == 3:
-        print("\nCargando ciudades...")
+        print("\nRecuperando informacion...")
+        controller.loadData(cont, sightingsfile, "city")
         city = input("\nCiudad a buscar: \n>")
+        print("\nCargando ciudades...")
         resultado = controller.getSightingsbyCity(cont, city)
         print("Se encontraron " + str(lt.size(resultado)) + " avistamientos\n")
         if lt.size(resultado) >= 6:
@@ -104,13 +110,37 @@ while True:
     
         else: 
             printAvistamiento(resultado)
-        
+        cont = controller.init()
+
     elif int(inputs[0]) == 4:
-        
-        limin = input("Ingrese un limite inferior: ")
-        limsup = input("Ingrese limite superior: " )
+        print("\nRecuperando informacion...")
+        controller.loadData(cont, sightingsfile, "duration (seconds)")
+        limin = float(input("Ingrese un limite inferior: "))
+        limsup = float(input("Ingrese limite superior: " ))
         print("\nCargando avistamientos por duracion...")
-        controller.sightingsbyDuration(cont, limin, limsup)
+    
+        resultado, max = controller.sightingsbyDuration(cont, limsup, limin)
+        print("Se encontraron " + str(lt.size(resultado)) + " avistamientos\n")
+        print("El avistamiento mas largo registrado tiene una duracion de " + str(max) +" segundos")
+        print("\nLos primeros y ultimos 3 avistamientos se muestran a continuacion: ")
+        if lt.size(resultado) >= 6:
+            top = lt.newList(cmpfunction=compareDurations)
+            for i in range(0,3):
+                lt.addLast(top, lt.firstElement(resultado))
+                lt.removeFirst(resultado)
+            i = 2
+            while i >= 0:
+                lt.addLast(top, lt.getElement(resultado, lt.size(resultado)-i))
+                lt.deleteElement(resultado, lt.size(resultado)- i)
+                i -= 1
+            printAvistamiento(top)
+    
+        else: 
+            printAvistamiento(resultado)
+        cont = controller.init()
+
+
+        
 
     
     else:
