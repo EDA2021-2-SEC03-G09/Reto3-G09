@@ -128,32 +128,37 @@ def indexHeight(analyzer):
 def indexSize(analyzer):
     return om.size(analyzer["dateIndex"])
 
+def agregarInfo(info, totalsightings, coords):
+   
+    if info is not None:
+        lstsightings = me.getValue(info)["lst"]
+        for i in range(1, lt.size(lstsightings)+1):
+            sightinginfo = lt.getElement(lstsightings, i)
+            informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": ""}
+            informacion["Ciudad"] = sightinginfo["city"]
+            informacion["Pais"] = sightinginfo["country"] 
+            informacion["Duracion"] = sightinginfo["duration (seconds)"]
+            informacion["Forma"] =  sightinginfo["shape"]
+            if coords:
+                informacion["Longitud"] = round(float(sightinginfo["longitude"]), 3)
+                informacion["Latitud"] = round(float(sightinginfo["latitude"]), 4)
+            sighting = {sightinginfo["datetime"]: informacion}
+            lt.addLast(totalsightings, sighting)
+
+    return totalsightings
+
 
 def getSightingsbyCity(analyzer, city):
     totalsightings = lt.newList(cmpfunction=compareDates)
     sightingDatesPair = om.keySet(analyzer["dateIndex"])
     for i in range(1, lt.size(sightingDatesPair)+1):
-        
         date = (lt.getElement(sightingDatesPair, i))
         sightingdate = om.get(analyzer["dateIndex"], date)
         sightingmap = me.getValue(sightingdate)["cityIndex"]
-        
+
         info = mp.get(sightingmap, city)
-        if info is not None:
-            lstsightings = me.getValue(info)["lst"]
-            for i in range(1, lt.size(lstsightings)+1):
-                sightinginfo = lt.getElement(lstsightings, i)
-                informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": 0}
-                
-            
-                informacion["Ciudad"] = sightinginfo["city"]
-                informacion["Pais"] = sightinginfo["country"] 
-                informacion["Duracion"] = sightinginfo["duration (seconds)"]
-                informacion["Forma"] =  sightinginfo["shape"]
-
-
-                sighting = {sightinginfo["datetime"]: informacion}
-                lt.addLast(totalsightings, sighting)
+        
+        totalsightings = agregarInfo(info, totalsightings, False)
     return totalsightings
  
 
@@ -171,17 +176,7 @@ def sightingsbyDuration(analyzer, limsup, limin):
             max = float(duracion)
         if float(duracion) >= limin and float(duracion) <= limsup:
             info = mp.get(sightingmap, duracion)
-            if info is not None:
-                lstsightings = me.getValue(info)["lst"]
-                for i in range(1, lt.size(lstsightings)+1):
-                    sightinginfo = lt.getElement(lstsightings, i)
-                    informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": 0}
-                    informacion["Ciudad"] = sightinginfo["city"]
-                    informacion["Pais"] = sightinginfo["country"] 
-                    informacion["Duracion"] = sightinginfo["duration (seconds)"]
-                    informacion["Forma"] =  sightinginfo["shape"]
-                    sighting = {sightinginfo["datetime"]: informacion}
-                    lt.addLast(totalsightings, sighting)
+            totalsightings = agregarInfo(info, totalsightings, False)
     return(totalsightings, max)  
     
 def latestSightings(analyzer, limsup, limin):
@@ -196,33 +191,50 @@ def latestSightings(analyzer, limsup, limin):
         sightingmap = me.getValue(sightingdate)["datetimeIndex"]
         duracion = lt.firstElement(mp.keySet(sightingmap))    
         duracionprov = datetime.datetime.strptime(duracion, "%Y-%m-%d %H:%M:%S")
-        
         if str(duracionprov.time()) > str(max):
             max = duracionprov.time()
         if duracionprov.time() > limin.time() and duracionprov.time() < limsup.time():
             info = mp.get(sightingmap, duracion)
-            if info is not None:
-                lstsightings = me.getValue(info)["lst"]
-                for i in range(1, lt.size(lstsightings)+1):
-                    sightinginfo = lt.getElement(lstsightings, i)
-                    informacion = {"Ciudad": "", "Pais": "", "Duracion": 0, "Forma": 0}
-                    informacion["Ciudad"] = sightinginfo["city"]
-                    informacion["Pais"] = sightinginfo["country"] 
-                    informacion["Duracion"] = sightinginfo["duration (seconds)"]
-                    informacion["Forma"] =  sightinginfo["shape"]
-                    sighting = {sightinginfo["datetime"]: informacion}
-                    lt.addLast(totalsightings, sighting)
+            totalsightings = agregarInfo(info, totalsightings, False)
     return(totalsightings, max)  
     
 
-
-      
+def sightingsbyRange(analyzer, limsup, limin):
+    max = datetime.datetime.strptime("2021-12-30", "%Y-%m-%d")
+    totalsightings = lt.newList(cmpfunction=compareDurations)
+    sightingDatesPair = om.keySet(analyzer["dateIndex"])
+    limsup = datetime.datetime.strptime(limsup, "%Y-%m-%d")
+    limin = datetime.datetime.strptime(limin, "%Y-%m-%d")
+    for i in range(1, lt.size(sightingDatesPair)+1):
+        date = (lt.getElement(sightingDatesPair, i))
+        sightingdate = om.get(analyzer["dateIndex"], date)
+        sightingmap = me.getValue(sightingdate)["datetimeIndex"]
+        duracion = lt.firstElement(mp.keySet(sightingmap))    
+        duracionprov = datetime.datetime.strptime(duracion, "%Y-%m-%d %H:%M:%S")
+        if str(duracionprov.date()) < str(max):
+            max = duracionprov.date()
+        if duracionprov.date() > limin.date() and duracionprov.date() < limsup.date():
+            info = mp.get(sightingmap, duracion)
+            totalsightings = agregarInfo(info, totalsightings, False)
+    return(totalsightings, max)  
     
-        
-        
 
-
-       
+def sightingsbycoords(analyzer, lonmax, lonmin, latmax, latmin):
+    totalsightings = lt.newList(cmpfunction=compareDurations)
+    sightingDatesPair = om.keySet(analyzer["dateIndex"])    
+    for i in range(1, lt.size(sightingDatesPair)+1):
+        date = (lt.getElement(sightingDatesPair, i))
+        sightingdate = om.get(analyzer["dateIndex"], date)
+        sightingmap = me.getValue(sightingdate)["longitudeIndex"]
+        longitud = lt.firstElement(mp.keySet(sightingmap))
+        if abs(float(longitud)) > abs(lonmin) and abs(float(longitud)) < abs(lonmax):
+            infolst = mp.get(sightingmap, longitud)
+            lstsightings = me.getValue(infolst)["lst"]
+            for i in range(0, lt.size(lstsightings)):
+                sightinginfo = lt.getElement(lstsightings, i)
+                if float(sightinginfo["latitude"]) > latmin and float(sightinginfo["latitude"]) < latmax:  
+                    agregarInfo(infolst, totalsightings, True)
+    return(totalsightings)
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 

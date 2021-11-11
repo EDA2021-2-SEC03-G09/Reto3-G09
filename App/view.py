@@ -138,7 +138,28 @@ while True:
         print("\nEl avistamiento mas tarde ocurrio a las " + str(max))
         cont = controller.init()
 
+    elif int(inputs[0]) == 6:
+        print("\nRecuperando informacion...")
+        controller.loadData(cont, sightingsfile, "datetime")
+        limin = input("Ingrese un limite inferior: ")
+        limsup =input("Ingrese limite superior: " )
+        print("\nCargando avistamientos por fecha...")
+        resultado, max = controller.sightingsbyRange(cont, limsup, limin)
+        crearTop(resultado, compareDates)
+        print("\nEl avistamiento mas antiguo ocurrio el " + str(max)+ "\n")
+        cont = controller.init()
     
+    elif int(inputs[0]) == 7:
+        print("\nRecuperando informacion...")
+        controller.loadData(cont, sightingsfile, "longitude")
+        lonmin = float(input("Ingrese una longitud minima: "))
+        lonmax = float(input("Ingrese una longitud maxima: "))
+        latmin = float(input("Ingrese una latitud minima: "))
+        latmax = float(input("Ingrese una latitud maxima: "))
+        print("\nCargando avistamientos por ubicacion geografica...")
+        resultado = controller.sightingsbycoords(cont, lonmax, lonmin, latmax, latmin)
+        crearTop(resultado, compareDates)
+        
     else:
         sys.exit(0)
 

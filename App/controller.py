@@ -82,6 +82,12 @@ def sightingsbyDuration(analyzer, limin, limsup):
 def latestSighting(analyzer, limsup, limin):
     return model.latestSightings(analyzer, limsup, limin)
 
+def sightingsbyRange(analyzer, limsup, limin):
+    return model.sightingsbyRange(analyzer, limsup, limin)
+
+def sightingsbycoords(analyzer, lonmax, lonmin, latmax, latmin):
+    return model.sightingsbycoords(analyzer, lonmax, lonmin, latmax, latmin)
+
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo
